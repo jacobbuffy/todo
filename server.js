@@ -1,7 +1,10 @@
 const express = require('express')
+const cors = require("cors")
 const app = express()
 
 app.use(express.json())
+app.use(cors())
+app.use(express.static("static"))
 
 const Pool = require('pg').Pool
 const pool = new Pool({
@@ -43,7 +46,7 @@ const createTask = (request, response) => {
     })
 }
 
-    //TODO: get ID from URL
+//TODO: get ID from URL
 const editTask = (request, response) => {
     const task = request.body
     console.log ('about to run edit query', task)
@@ -58,13 +61,35 @@ const editTask = (request, response) => {
     })
 }
 
+//TODO: get ID from URL
+const deleteTask = (request, response) => {
+    const task = request.body
+    console.log ('about to run delete query', task)
+    const result = pool.query('delete from tasks where id=$1',[task.id])
+    result.catch((poop)=> {
+        console.log (poop)
+        response.status(500).end()
+    })
+    result.then ((success)=> {
+        if (success.rowCount == 0){
+            response.status(404) .end()
+            return
+        }
+        console.log ('success!',success)
+        response.end()
+    })
+}
+
 app.get('/api/tasks/', getTasks)
 
 app.post('/api/tasks/', createTask)
 
 app.put('/api/tasks/', editTask)
 
+app.delete('/api/tasks/', deleteTask)
+
 const PORT = 3001
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`)
 })
+
